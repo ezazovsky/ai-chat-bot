@@ -9,6 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@langchain/core": "^0.3.57",
+    "@upstash/rag-chat": "^2.0.3",
     "next": "15.3.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
