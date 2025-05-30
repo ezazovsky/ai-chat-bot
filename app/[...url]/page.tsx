@@ -1,35 +1,31 @@
-import { ragChat } from '@/lib/rag-chat';
-import { redis } from '@/lib/redis';
+// app/[...url]/page.tsx
+export const dynamic = 'force-dynamic'
 
-interface PageProps {
-    params: {
-        url: string[];
-    }
+import { ragChat } from '@/lib/rag-chat'
+import { redis } from '@/lib/redis'
+
+function reconstructUrl(url: string[]) {
+  return url.map(decodeURIComponent).join('/')
 }
 
-function reconstructUrl({url}: {url:string[]}) {
-    const decodedComponents = url.map((component) => decodeURIComponent(component))
+type ActualParams = { params: Promise<{ url: string[] }> }
 
-    return decodedComponents.join("/")
+export default async function Page({ params }: ActualParams) {
+  const { url } = await params; // await here
+
+  const reconstructedUrl = reconstructUrl(url)
+
+  const isAlreadyIndexed = await redis.sismember('indexed-urls', reconstructedUrl)
+
+  if (!isAlreadyIndexed) {
+    await ragChat.context.add({
+      type: 'html',
+      source: reconstructedUrl,
+      config: { chunkOverlap: 50, chunkSize: 200 },
+    })
+
+    await redis.sadd('indexed-urls', reconstructedUrl)
+  }
+
+  return <p>hello</p>
 }
-
-const Page = async ({ params }: PageProps) => {
-    const reconstructedUrl = reconstructUrl({url: params.url as string[] })
-    
-    const isAlreadyIndexed = await redis.sismember("indexed-urls", reconstructedUrl)
-    
-    if (!isAlreadyIndexed) {
-        await ragChat.context.add ({
-            type: "html",
-            source: reconstructedUrl,
-            config: {chunkOverlap: 50, chunkSize: 200},
-        })
-        
-        await redis.sadd("indexed-urls", reconstructedUrl)
-    }
-    
-
-    return <p>hello</p>
-}
-
-export default Page;
