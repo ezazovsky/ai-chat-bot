@@ -1,6 +1,7 @@
 // app/[...url]/page.tsx
 export const dynamic = 'force-dynamic'
 
+import { ChatWrapper } from '@/components/ChatWrapper'
 import { ragChat } from '@/lib/rag-chat'
 import { redis } from '@/lib/redis'
 
@@ -17,6 +18,8 @@ export default async function Page({ params }: ActualParams) {
 
   const isAlreadyIndexed = await redis.sismember('indexed-urls', reconstructedUrl)
 
+  const sessionId = "mock-session"
+
   if (!isAlreadyIndexed) {
     await ragChat.context.add({
       type: 'html',
@@ -27,5 +30,5 @@ export default async function Page({ params }: ActualParams) {
     await redis.sadd('indexed-urls', reconstructedUrl)
   }
 
-  return <p>hello</p>
+  return <ChatWrapper sessionId={sessionId}/>
 }
